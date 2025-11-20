@@ -13,11 +13,11 @@ COR_INDICADOR = (255, 255, 255) # Bolinha do jogador
 
 # Assets de Imagem
 ASSETS = {
-    "amarelo": "porco-amarelo.png",
-    "rosa": "porco-rosa.png",
-    "azul": "porco-azul.png",
-    "roxo": "porco-roxo.png",
-    "bag": "bag.png"
+    "amarelo": "assets/porco-amarelo.png",
+    "rosa": "assets/porco-rosa.png",
+    "azul": "assets/porco-azul.png",
+    "roxo": "assets/porco-roxo.png",
+    "bag": "assets/bag.png"
 }
 
 # Configurações do Jogo
