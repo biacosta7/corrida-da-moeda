@@ -1,1 +1,3 @@
 venv
+jogo\plots\__pycache__
+*.pyc

@@ -1,10 +1,10 @@
+# main.py
 from interface import GameInterface
-from plots.grafico import Grafico
 
 def main():
-    g = Grafico()
-    game = GameInterface(g)
-    game.loop()
+    # escolha quantos jogadores quer (2..4). Pode ajustar aqui:
+    game = GameInterface(num_players=3, cells=20)
+    game.run()
 
 if __name__ == "__main__":
     main()

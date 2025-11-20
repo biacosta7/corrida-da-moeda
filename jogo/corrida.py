@@ -1,9 +1,9 @@
-class Personagem:
-    def __init__(self, nome):
+# corrida.py
+class Jogador:
+    def __init__(self, nome, cor, idx):
         self.nome = nome
-        self.x = 0
-        self.pontuacao = 0
-    
-    def avancar(self):
-        self.x += 5
-        self.pontuacao += 1
+        self.cor = cor
+        self.posicao = 0
+        self.ativo = True       # se ainda não chegou ao final
+        self.colocacao = None   # 1,2,3,4 quando termina
+        self.idx = idx          # índice (0..)

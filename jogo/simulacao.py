@@ -1,3 +1,4 @@
+# simulacao.py
 import random
 
 class SimulacaoMoeda:
@@ -7,17 +8,19 @@ class SimulacaoMoeda:
         self.total = 0
 
     def lancar(self):
+        """Retorna 'H' para cara ou 'T' para coroa e atualiza contadores."""
         resultado = random.choice(["H", "T"])
         self.total += 1
-
         if resultado == "H":
             self.cara += 1
         else:
             self.coroa += 1
-
         return resultado
 
     def get_frequencias(self):
         if self.total == 0:
             return 0.5, 0.5
         return self.cara / self.total, self.coroa / self.total
+
+    def get_counts(self):
+        return self.cara, self.coroa, self.total
