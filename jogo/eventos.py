@@ -1,4 +1,9 @@
-import random
+from simulacao import SimulacaoMoeda
+
+sim = SimulacaoMoeda()
 
 def lancar_moeda():
-    return random.choice([0, 1])  # 0 = coroa, 1 = cara
+    return sim.lancar()
+
+def obter_frequencias():
+    return sim.get_frequencias()

@@ -1,10 +1,10 @@
-from jogo.interface import GameInterface
+from interface import GameInterface
 from plots.grafico import Grafico
 
 def main():
-    grafico = Grafico()
-    jogo = GameInterface(grafico)
-    jogo.loop()  # Loop principal do pygame
+    g = Grafico()
+    game = GameInterface(g)
+    game.loop()
 
 if __name__ == "__main__":
     main()

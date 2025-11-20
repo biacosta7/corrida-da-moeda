@@ -1,42 +1,55 @@
 import pygame
-from jogo.corrida import Personagem
-from jogo.eventos import lancar_moeda
+from corrida import Personagem
+from eventos import lancar_moeda
 
 class GameInterface:
     def __init__(self, grafico):
         pygame.init()
         self.tela = pygame.display.set_mode((1200, 600))
+        pygame.display.set_caption("Corrida da Moeda")
         self.clock = pygame.time.Clock()
         self.grafico = grafico
 
-        # Personagens
-        self.A = Personagem("A", None)
-        self.B = Personagem("B", None)
+        self.A = Personagem("A")
+        self.B = Personagem("B")
+
+        self.fonte = pygame.font.SysFont("Arial", 24)
+
+    def desenhar_personagens(self):
+        pygame.draw.circle(self.tela, (0, 150, 255), (100 + self.A.x, 200), 25)
+        pygame.draw.circle(self.tela, (255, 120, 0), (100 + self.B.x, 400), 25)
+
+        textoA = self.fonte.render(f"A: {self.A.pontuacao}", True, (255,255,255))
+        textoB = self.fonte.render(f"B: {self.B.pontuacao}", True, (255,255,255))
+
+        self.tela.blit(textoA, (50, 150))
+        self.tela.blit(textoB, (50, 350))
+
+    def atualizar(self):
+        resultado = lancar_moeda()
+
+        if resultado == "H":
+            self.A.avancar()
+        else:
+            self.B.avancar()
+
+        return resultado
 
     def loop(self):
         rodando = True
+
         while rodando:
             for evento in pygame.event.get():
                 if evento.type == pygame.QUIT:
                     rodando = False
 
-            # Lançar moedas
-            rA = lancar_moeda()
-            rB = lancar_moeda()
+            r = self.atualizar()
+            self.grafico.atualizar(r)
 
-            if rA == 1: self.A.avancar()
-            if rB == 1: self.B.avancar()
-
-            # Atualizar gráfico
-            self.grafico.atualizar(rA, rB)
-
-            # Renderizar corrida
-            self.render()
+            self.tela.fill((30, 30, 30))
+            self.desenhar_personagens()
 
             pygame.display.update()
             self.clock.tick(30)
 
-    def render(self):
-        self.tela.fill((30, 30, 30))
-        pygame.draw.circle(self.tela, (0,255,0), (self.A.x + 50, 200), 20)
-        pygame.draw.circle(self.tela, (0,0,255), (self.B.x + 50, 400), 20)
+        pygame.quit()

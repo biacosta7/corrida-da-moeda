@@ -1,7 +1,6 @@
 class Personagem:
-    def __init__(self, nome, sprite):
+    def __init__(self, nome):
         self.nome = nome
-        self.sprite = sprite
         self.x = 0
         self.pontuacao = 0
     
