@@ -1,14 +1,25 @@
 # eventos.py
-# interface simples para a simulação global (um único objeto compartilhado)
-from simulacao import SimulacaoMoeda
 
-sim = SimulacaoMoeda()
+import random
 
-def lancar_moeda():
-    return sim.lancar()
+class SimuladorMoeda:
+    """Gerencia a simulação e os resultados da moeda."""
+    def __init__(self):
+        self.cara = 0
+        self.coroa = 0
+        self.total = 0
+        
+    def lancar(self):
+        """Simula o lançamento de uma moeda justa (0.5/0.5)."""
+        resultado = random.choice(['H', 'T']) # H (Cara) ou T (Coroa)
+        self.total += 1
+        
+        if resultado == 'H':
+            self.cara += 1
+            return 'H'
+        else:
+            self.coroa += 1
+            return 'T'
 
-def obter_frequencias():
-    return sim.get_frequencias()
-
-def obter_contadores():
-    return sim.get_counts()
+# Instância global para ser usada em grafico.py e corrida.py
+sim = SimuladorMoeda()
