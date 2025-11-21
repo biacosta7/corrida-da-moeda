@@ -97,6 +97,26 @@ class BoardDrawer:
         self.MOEDAS_INICIAIS_POR_PORCO = 3
         self.NUM_PORCOS = 4
 
+        self.coordenadas_canto = {
+            0: (50, 50), # Amarelo (Superior Esquerdo)
+            1: (LARGURA_TELA - 120, 50), # Roxo (Superior Direito)
+            2: (50, ALTURA_TELA - 120), # Rosa (Inferior Esquerdo)
+            3: (LARGURA_TELA - 120, ALTURA_TELA - 120), # Azul (Inferior Direito)
+        }
+
+        # NOVO: Posições centrais para o botão da moeda (Moeda de 40px de diâmetro)
+        self.coordenadas_moeda_botao = {
+            # Posiciona o centro da moeda 30px à direita do bloco 100x100
+            0: (50 + 100 + 30, 50 + 50), 
+            1: (LARGURA_TELA - 120 - 30, 50 + 50),
+            2: (50 + 100 + 30, ALTURA_TELA - 120 + 50),
+            3: (LARGURA_TELA - 120 - 30, ALTURA_TELA - 120 + 50),
+        }
+        
+        # NOVO: Estado visual da moeda (0: neutro, 1: Cara, 2: Coroa)
+        self.estado_moeda = 0 
+        self.resultado_texto = "" # C ou K
+
     def _desenhar_moedas(self, screen, x, y, total_moedas):
         """
         Desenha, para cada um dos 4 porquinhos (posição 2x2 dentro do bloco 100x100),
@@ -252,16 +272,45 @@ class BoardDrawer:
                     y_atual += dy_step * self.unidade_passo # Usa UNIDADE_PASSO
                 
                 # (x_atual, y_atual) é o centro do bloco onde o jogador está
-                pygame.draw.circle(self.screen, jogador.cor, (x_atual, y_atual), self.tamanho_bloco // 3)
+                pygame.draw.circle(self.screen, COR_INDICADOR, (x_atual, y_atual), self.tamanho_bloco // 3)
 
             # Posição 10: No centro (chegou ao círculo branco)
             elif posicao_caminho == self.caminho_tamanho + 1: 
                 # Desenha o indicador no centro do tabuleiro (sobre o círculo branco)
                 pygame.draw.circle(self.screen, jogador.cor, (self.centro_x, self.centro_y), self.tamanho_bloco // 3) 
                 
+        """Desenha todos os elementos do jogo."""
+    
+    def _desenhar_moeda_botao(self):
+        """Desenha a moeda clicável e o resultado (C/K) para o jogador ativo."""
+        
+        if not self.game.jogo_ativo:
+            return
+
+        jogador_ativo_idx = self.game.jogador_atual_idx
+        
+        # Coordenadas do centro da moeda (Botão)
+        cx, cy = self.coordenadas_moeda_botao[jogador_ativo_idx]
+        raio = 20
+        
+        # 1. Desenhar Círculo de fundo
+        cor_jogador = self.game.jogadores[jogador_ativo_idx].cor 
+        # A cor da borda pode ser usada para um efeito de "clicável"
+        pygame.draw.circle(self.screen, cor_jogador, (cx, cy), raio, 0)
+        
+        # 2. Desenhar o texto do resultado (C ou K)
+        if self.resultado_texto:
+            font_moeda = pygame.font.Font(None, 36) 
+            texto = font_moeda.render(self.resultado_texto, True, COR_BRANCO)
+            self.screen.blit(
+                texto,
+                (cx - texto.get_width() // 2, cy - texto.get_height() // 2)
+            )
+    
     def desenhar_tudo(self):
         """Desenha todos os elementos do jogo."""
         self._desenhar_caminho()
         self._desenhar_porquinhos()
         self._desenhar_centro()
         self._desenhar_indicadores()
+        self._desenhar_moeda_botao()

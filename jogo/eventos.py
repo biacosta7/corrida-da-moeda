@@ -9,9 +9,11 @@ class SimuladorMoeda:
         self.coroa = 0
         self.total = 0
         
-    def lancar(self):
-        """Simula o lançamento de uma moeda justa (0.5/0.5)."""
-        resultado = random.choice(['H', 'T']) # H (Cara) ou T (Coroa)
+    def lancar_e_registrar(self): # <--- NOVO MÉTODO
+        """Simula o lançamento e registra o resultado."""
+        
+        # 'H' (Cara) ou 'T' (Coroa) para manter a compatibilidade com o gráfico
+        resultado = random.choice(['H', 'T']) 
         self.total += 1
         
         if resultado == 'H':
