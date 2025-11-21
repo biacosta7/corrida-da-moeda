@@ -3,15 +3,15 @@
 import random
 
 class SimuladorMoeda:
-    """Gerencia a simulação e os resultados da moeda."""
+    """Gerencia a simulação estatística e os resultados da moeda."""
     def __init__(self):
         self.cara = 0
         self.coroa = 0
         self.total = 0
         
-    def lancar(self):
-        """Simula o lançamento de uma moeda justa (0.5/0.5)."""
-        resultado = random.choice(['H', 'T']) # H (Cara) ou T (Coroa)
+    def lancar_e_registrar(self):
+        """Simula o lançamento, registra o resultado e retorna 'H' (Cara) ou 'T' (Coroa)."""
+        resultado = random.choice(['H', 'T']) 
         self.total += 1
         
         if resultado == 'H':
