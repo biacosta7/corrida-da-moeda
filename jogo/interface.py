@@ -95,24 +95,29 @@ class BoardDrawer:
             3: (LARGURA_TELA - MARGEM - LADO - self.unidade_passo // 2, ALTURA_TELA - MARGEM - LADO // 2),
         }
                 
-        # Coordenadas centrais para o botão da moeda (Raio 90)
-        self.RAIO_MOEDA_BOTAO = 20 # 90
-        OFFSET_MOEDA = 100 # Offset para centralizar visualmente a moeda no espaço entre o bloco e o caminho
+        self.RAIO_MOEDA_BOTAO = 22 
+        # Define a nova distância de afastamento do bloco
+        DISTANCIA_BLOCO = self.RAIO_MOEDA_BOTAO + 10 
+        
+        # Define o deslocamento vertical
+        OFFSET_VERTICAL = 60
 
         self.coordenadas_moeda_botao = {
-            # 0: Amarelo (Superior Esquerdo) -> Borda direita do bloco + raio do botão
-            0: (MARGEM + LADO + self.RAIO_MOEDA_BOTAO, MARGEM + LADO // 2), 
+            # 0: Amarelo (Superior Esquerdo)
+            # X: Afasta para direita. Y: Move para baixo (Centro Y + 40)
+            0: (MARGEM + LADO + DISTANCIA_BLOCO, MARGEM + LADO // 2 + OFFSET_VERTICAL), 
             
-            # 1: Roxo (Superior Direito) -> Borda esquerda do bloco - raio do botão
-            1: (LARGURA_TELA - MARGEM - LADO - self.RAIO_MOEDA_BOTAO, MARGEM + LADO // 2),
+            # 1: Roxo (Superior Direito)
+            # X: Afasta para esquerda. Y: Move para baixo (Centro Y + 40)
+            1: (LARGURA_TELA - MARGEM - LADO - DISTANCIA_BLOCO, MARGEM + LADO // 2 + OFFSET_VERTICAL),
             
-            # 2: Rosa (Inferior Esquerdo) -> Borda inferior do bloco + raio do botão
-            # O bloco 2 está no canto inferior esquerdo. O botão deve ficar à direita, como o jogador 0.
-            # O posicionamento anterior colocava acima/abaixo, vamos seguir o padrão lateral para consistência visual.
-            2: (MARGEM + LADO + self.RAIO_MOEDA_BOTAO, ALTURA_TELA - MARGEM - LADO // 2),
+            # 2: Rosa (Inferior Esquerdo)
+            # X: Afasta para direita. Y: Move para baixo (Centro Y + 40)
+            2: (MARGEM + LADO + DISTANCIA_BLOCO, ALTURA_TELA - MARGEM - LADO // 2 + OFFSET_VERTICAL),
             
-            # 3: Azul (Inferior Direito) -> Borda esquerda do bloco - raio do botão
-            3: (LARGURA_TELA - MARGEM - LADO - self.RAIO_MOEDA_BOTAO, ALTURA_TELA - MARGEM - LADO // 2),
+            # 3: Azul (Inferior Direito)
+            # X: Afasta para esquerda. Y: Move para baixo (Centro Y + 40)
+            3: (LARGURA_TELA - MARGEM - LADO - DISTANCIA_BLOCO, ALTURA_TELA - MARGEM - LADO // 2 + OFFSET_VERTICAL),
         }
         
         self.resultado_texto = ""
@@ -258,7 +263,7 @@ class BoardDrawer:
 
         # 3. Desenhar o texto do resultado (C ou K)
         if self.resultado_texto:
-            font_moeda = pygame.font.Font(None, 30) 
+            font_moeda = pygame.font.Font(None, 32) 
             texto = font_moeda.render(self.resultado_texto, True, COR_BRANCO)
             self.screen.blit(
                 texto,
