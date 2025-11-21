@@ -20,6 +20,11 @@ class BoardDrawer:
         
         # Carregar e redimensionar assets
         self.assets_carregados = {}
+        # Cria um placeholder redimensionado para o 'bag' (80x80)
+        placeholder_bag = pygame.transform.scale(self.placeholder_porco, (80, 80)) 
+        # Cria um placeholder redimensionado para o porquinho (40x40)
+        placeholder_porquinho = pygame.transform.scale(self.placeholder_porco, (40, 40))
+
         for nome, nome_arquivo in ASSETS.items():
             
             # CONSTRUÇÃO DO CAMINHO: Junta o diretório do script (jogo/) 
@@ -84,57 +89,78 @@ class BoardDrawer:
             3: (LARGURA_TELA - 50 - self.tamanho_bloco // 2, ALTURA_TELA - 50 - 100 - self.tamanho_bloco // 2),
         }
 
-    def _desenhar_moedas(self, screen, x, y, cor_fundo, num_moedas):
-        """Desenha as moedas (círculos '3') sobre a imagem do porquinho."""
-        
-        posicoes = [(-20, -20), (0, -20), (20, -20), 
-                    (-20, 0), (0, 0), (20, 0)]
-        
-        moedas_a_desenhar = min(num_moedas, TOTAL_MOEDAS_INICIAIS) 
-        
-        for i in range(moedas_a_desenhar):
-            moeda_x = x + posicoes[i][0] + 35 
-            moeda_y = y + posicoes[i][1] + 35
-            
-            pygame.draw.circle(screen, cor_fundo, (moeda_x, moeda_y), 10)
-            
-            texto = self.font.render("3", True, COR_BRANCO)
-            screen.blit(texto, (moeda_x - 5, moeda_y - 8))
+        # constantes/limites usados pela interface
+        self.MOEDAS_INICIAIS_POR_PORCO = 3
+        self.NUM_PORCOS = 4
+
+    def _desenhar_moedas(self, screen, x, y, total_moedas):
+        """
+        Desenha, para cada um dos 4 porquinhos (posição 2x2 dentro do bloco 100x100),
+        quantas moedas esse porquinho tem (0..MOEDAS_INICIAIS_POR_PORCO).
+        total_moedas é o total de moedas do jogador (ex: 7).
+        """
+        posicoes = [
+            (25, 25), (75, 25),
+            (25, 75), (75, 75)
+        ]
+
+        # Para cada porquinho (0..NUM_PORCOS-1) calcula quantas moedas ele tem
+        for i in range(self.NUM_PORCOS):
+            # moedas pertencentes ao porquinho i
+            # ex: porquinho 0 -> total - 0*3, porquinho 1 -> total - 1*3, ...
+            moedas_porquinho = max(0, min(total_moedas - i * self.MOEDAS_INICIAIS_POR_PORCO,
+                                            self.MOEDAS_INICIAIS_POR_PORCO))
+
+            if moedas_porquinho > 0:
+                cx = x + posicoes[i][0]
+                cy = y + posicoes[i][1]
+
+                # Desenha o círculo de fundo e o número (3,2,1)
+                pygame.draw.circle(screen, COR_BRANCO, (cx, cy), 10)
+                texto = self.font.render(str(moedas_porquinho), True, COR_PRETO)
+                screen.blit(
+                    texto,
+                    (cx - texto.get_width() // 2, cy - texto.get_height() // 2)
+                )
             
     def _desenhar_porquinhos(self):
-        """Desenha os 4 porquinhos e suas moedas."""
+        """Desenha os 4 porquinhos e indica as moedas restantes."""
         
         asset_map = {0: "amarelo", 1: "roxo", 2: "rosa", 3: "azul"}
         
         for i, jogador in enumerate(self.game.jogadores):
             x_canto, y_canto = self.coordenadas_canto[i]
             
-            # Desenha o bloco de cor do porquinho (Fundo)
-            pygame.draw.rect(self.screen, jogador.cor, (x_canto, y_canto, 100, 100), 0, 5)
+            # Desenha a área de fundo colorida do jogador (100x100)
+            pygame.draw.rect(self.screen, jogador.cor, (x_canto, y_canto, 100, 100), 0, 15)
 
-            # Desenha a imagem do porquinho 
             asset_nome = asset_map[i]
-            porquinho_img = self.assets_carregados.get(asset_nome, self.placeholder_porco) 
+            porquinho_img = self.assets_carregados.get(asset_nome)
             
-            # Posições dos 4 porquinhos (simplificação, 2x2)
+            # Posições dos 4 porquinhos 2x2 dentro do bloco 100x100
             pos_porcos = [
-                (x_canto + 5, y_canto + 5), (x_canto + 50, y_canto + 5),
-                (x_canto + 5, y_canto + 50), (x_canto + 50, y_canto + 50)
+                (x_canto + 5, y_canto + 5), (x_canto + 55, y_canto + 5),
+                (x_canto + 5, y_canto + 55), (x_canto + 55, y_canto + 55)
             ]
             
-            num_porquinhos_visiveis = math.ceil(jogador.moedas_no_porco / MOEDAS_INICIAIS_POR_PORCO)
-            
-            for j in range(NUM_PORCOS):
-                if j < num_porquinhos_visiveis:
+            # porquinhos_restantes: quantos porquinhos ainda têm moedas inteiras (3)
+            # se total == 0 -> 0
+            porquinhos_restantes = 0
+            if jogador.moedas_no_porco > 0:
+                porquinhos_restantes = math.ceil(jogador.moedas_no_porco / self.MOEDAS_INICIAIS_POR_PORCO)
+
+            for j in range(self.NUM_PORCOS):
+                if porquinho_img:
                     self.screen.blit(porquinho_img, pos_porcos[j])
-                else:
-                    # Desenha um bloco vazio se o porquinho já depositou suas 3 moedas
-                    pygame.draw.rect(self.screen, COR_PRETO, (pos_porcos[j][0], pos_porcos[j][1], 40, 40)) 
-
-
-            # Desenha as moedas restantes no porco principal
-            moedas_a_mostrar = num_porquinhos_visiveis
-            self._desenhar_moedas(self.screen, x_canto, y_canto, jogador.cor, moedas_a_mostrar)
+                
+                # Overlay escuro se o porquinho já depositou suas 3 moedas (ou seja, não está cheio)
+                if j >= porquinhos_restantes:
+                    overlay = pygame.Surface((40, 40), pygame.SRCALPHA)
+                    overlay.fill((0, 0, 0, 150)) 
+                    self.screen.blit(overlay, pos_porcos[j])
+                    
+            # Desenha os números (3,2,1,0) a partir do total de moedas do jogador
+            self._desenhar_moedas(self.screen, x_canto, y_canto, jogador.moedas_no_porco)
 
 
     def _desenhar_caminho(self):
