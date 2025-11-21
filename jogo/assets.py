@@ -13,10 +13,10 @@ COR_INDICADOR = (255, 255, 255) # Bolinha do jogador
 
 # Assets de Imagem
 ASSETS = {
-    "amarelo": "assets/porco-amarelo.png",
-    "rosa": "assets/porco-rosa.png",
-    "azul": "assets/porco-azul.png",
-    "roxo": "assets/porco-roxo.png",
+    "porco-amarelo": "assets/porco-amarelo.png",
+    "porco-rosa": "assets/porco-rosa.png",
+    "porco-azul": "assets/porco-azul.png",
+    "porco-roxo": "assets/porco-roxo.png",
     "bag": "assets/bag.png"
 }
 

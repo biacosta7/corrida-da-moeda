@@ -49,7 +49,6 @@ def main():
             
         screen.blit(texto_status, (10, 10))
 
-
         # Atualizar a tela
         pygame.display.flip()
 
@@ -57,6 +56,4 @@ def main():
     sys.exit()
 
 if __name__ == "__main__":
-    # É necessário ter os assets de imagem na pasta de execução, ex:
-    # porco-amarelo.png, porco-rosa.png, etc.
     main()

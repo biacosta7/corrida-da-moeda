@@ -14,21 +14,29 @@ class BoardDrawer:
         self.screen = screen
         self.game = game_manager
         
-        # Placeholder genérico (usado em caso de falha de carregamento)
-        self.placeholder_porco = pygame.Surface((70, 70))
-        self.placeholder_porco.fill((100, 100, 100)) 
+        # Placeholder genérico (Agora 40x40, o tamanho correto para o grid 2x2)
+        self.placeholder_porco = pygame.Surface((40, 40)) 
+        self.placeholder_porco.fill((100, 100, 100)) # Cor Cinza
         
-        # Carregar e redimensionar assets
         self.assets_carregados = {}
-        # Cria um placeholder redimensionado para o 'bag' (80x80)
-        placeholder_bag = pygame.transform.scale(self.placeholder_porco, (80, 80)) 
-        # Cria um placeholder redimensionado para o porquinho (40x40)
-        placeholder_porquinho = pygame.transform.scale(self.placeholder_porco, (40, 40))
 
         for nome, nome_arquivo in ASSETS.items():
             
+            caminho_completo = os.path.join(SCRIPT_DIR, nome_arquivo) 
+            
+            try:
+                img = pygame.image.load(caminho_completo).convert_alpha()
+                
+                # Redimensionar e armazenar SOMENTE se o carregamento foi bem-sucedido
+                if 'porco' in nome:
+                    self.assets_carregados[nome] = pygame.transform.scale(img, (40, 40))
+                elif nome == 'bag':
+                    self.assets_carregados[nome] = pygame.transform.scale(img, (100, 100))
+            
+            except pygame.error as e:
+                print(f"🛑 ERRO CRÍTICO AO CARREGAR IMAGEM: {nome_arquivo} em {caminho_completo}. Erro: {e}")
+            
             # CONSTRUÇÃO DO CAMINHO: Junta o diretório do script (jogo/) 
-            # com o caminho relativo do asset (ex: assets/porco-amarelo.png)
             caminho_completo = os.path.join(SCRIPT_DIR, nome_arquivo) 
             
             try:
@@ -36,22 +44,22 @@ class BoardDrawer:
                 
                 # Redimensionar porquinhos e o saco
                 if 'porco' in nome:
-                    self.assets_carregados[nome] = pygame.transform.scale(img, (70, 70))
+                    # PADRONIZAÇÃO: Escala para 40x40 para caber no grid 2x2.
+                    self.assets_carregados[nome] = pygame.transform.scale(img, (40, 40))
                 elif nome == 'bag':
                     self.assets_carregados[nome] = pygame.transform.scale(img, (100, 100))
+            
             except pygame.error as e:
                 print(f"Erro ao carregar imagem: {nome_arquivo} em {caminho_completo}. Usando placeholder. Erro: {e}")
-                
                 if 'porco' in nome:
-                    self.assets_carregados[nome] = self.placeholder_porco
+                    self.assets_carregados[nome] = self.placeholder_porco 
                 elif nome == 'bag':
                     self.assets_carregados[nome] = pygame.transform.scale(self.placeholder_porco, (100, 100))
 
-
         self.font = pygame.font.Font(None, 24)
         self.tamanho_bloco = TAMANHO_BLOCO
-        self.unidade_passo = UNIDADE_PASSO # NOVO
-        self.caminho_tamanho = CAMINHO_TAMANHO # Deve ser 9
+        self.unidade_passo = UNIDADE_PASSO 
+        self.caminho_tamanho = CAMINHO_TAMANHO 
 
         # Definir as coordenadas dos cantos para cada jogador (Caixa 100x100)
         self.coordenadas_canto = {
@@ -65,7 +73,7 @@ class BoardDrawer:
         self.centro_x = LARGURA_TELA // 2
         self.centro_y = ALTURA_TELA // 2
         
-        # --- NOVO: Estrutura do Caminho (9 movimentos) ---
+        # Estrutura do Caminho (9 movimentos)
         self.path_movements = {
             # 0: Amarelo (7 Direita (+X), 2 Baixo (+Y))
             0: [(1, 0)] * 7 + [(0, 1)] * 2,
@@ -79,16 +87,12 @@ class BoardDrawer:
         
         # Definir as coordenadas do primeiro bloco de cada caminho (CENTRO DO BLOCO)
         self.coordenadas_inicio_caminho = {
-            # Amarelo (0) - Começa à direita da caixa 100x100
-            0: (50 + 100 + self.tamanho_bloco // 2, 50 + self.tamanho_bloco // 2), 
-            # Roxo (1) - Começa abaixo da caixa 100x100
-            1: (LARGURA_TELA - 50 - self.tamanho_bloco // 2, 50 + 100 + self.tamanho_bloco // 2),
-            # Rosa (2) - Começa à direita da caixa 100x100
-            2: (50 + 100 + self.tamanho_bloco // 2, ALTURA_TELA - 50 - self.tamanho_bloco // 2), 
-            # Azul (3) - Começa acima da caixa 100x100
-            3: (LARGURA_TELA - 50 - self.tamanho_bloco // 2, ALTURA_TELA - 50 - 100 - self.tamanho_bloco // 2),
+            0: (50 + 100 + self.unidade_passo // 2, 50 + self.unidade_passo // 2), 
+            1: (LARGURA_TELA - 50 - self.unidade_passo // 2, 50 + 100 + self.unidade_passo // 2),
+            2: (50 + 100 + self.unidade_passo // 2, ALTURA_TELA - 50 - self.unidade_passo // 2), 
+            3: (LARGURA_TELA - 50 - self.unidade_passo // 2, ALTURA_TELA - 50 - 100 - self.unidade_passo // 2),
         }
-
+        
         # constantes/limites usados pela interface
         self.MOEDAS_INICIAIS_POR_PORCO = 3
         self.NUM_PORCOS = 4
@@ -107,7 +111,6 @@ class BoardDrawer:
         # Para cada porquinho (0..NUM_PORCOS-1) calcula quantas moedas ele tem
         for i in range(self.NUM_PORCOS):
             # moedas pertencentes ao porquinho i
-            # ex: porquinho 0 -> total - 0*3, porquinho 1 -> total - 1*3, ...
             moedas_porquinho = max(0, min(total_moedas - i * self.MOEDAS_INICIAIS_POR_PORCO,
                                             self.MOEDAS_INICIAIS_POR_PORCO))
 
@@ -122,11 +125,16 @@ class BoardDrawer:
                     texto,
                     (cx - texto.get_width() // 2, cy - texto.get_height() // 2)
                 )
-            
+
     def _desenhar_porquinhos(self):
         """Desenha os 4 porquinhos e indica as moedas restantes."""
         
-        asset_map = {0: "amarelo", 1: "roxo", 2: "rosa", 3: "azul"}
+        asset_map = {
+            0: "porco-amarelo", 
+            1: "porco-roxo", 
+            2: "porco-rosa", 
+            3: "porco-azul"
+        }
         
         for i, jogador in enumerate(self.game.jogadores):
             x_canto, y_canto = self.coordenadas_canto[i]
@@ -135,33 +143,31 @@ class BoardDrawer:
             pygame.draw.rect(self.screen, jogador.cor, (x_canto, y_canto, 100, 100), 0, 15)
 
             asset_nome = asset_map[i]
-            porquinho_img = self.assets_carregados.get(asset_nome)
-            
+            porquinho_img = self.assets_carregados.get(asset_nome, self.placeholder_porco)
+
             # Posições dos 4 porquinhos 2x2 dentro do bloco 100x100
+            # As coordenadas estão ajustadas para imagens de 40x40
             pos_porcos = [
                 (x_canto + 5, y_canto + 5), (x_canto + 55, y_canto + 5),
                 (x_canto + 5, y_canto + 55), (x_canto + 55, y_canto + 55)
             ]
             
             # porquinhos_restantes: quantos porquinhos ainda têm moedas inteiras (3)
-            # se total == 0 -> 0
             porquinhos_restantes = 0
+            
             if jogador.moedas_no_porco > 0:
                 porquinhos_restantes = math.ceil(jogador.moedas_no_porco / self.MOEDAS_INICIAIS_POR_PORCO)
 
             for j in range(self.NUM_PORCOS):
-                if porquinho_img:
+                if j < porquinhos_restantes:
                     self.screen.blit(porquinho_img, pos_porcos[j])
-                
-                # Overlay escuro se o porquinho já depositou suas 3 moedas (ou seja, não está cheio)
-                if j >= porquinhos_restantes:
-                    overlay = pygame.Surface((40, 40), pygame.SRCALPHA)
-                    overlay.fill((0, 0, 0, 150)) 
-                    self.screen.blit(overlay, pos_porcos[j])
+                else:
+                    # Se já foi depositado (lote vazio), desenha um bloco preto para mostrar que está esgotado
+                    # O tamanho 40x40 é usado para cobrir o espaço do porquinho
+                    pygame.draw.rect(self.screen, COR_PRETO, (pos_porcos[j][0], pos_porcos[j][1], 40, 40))
                     
             # Desenha os números (3,2,1,0) a partir do total de moedas do jogador
             self._desenhar_moedas(self.screen, x_canto, y_canto, jogador.moedas_no_porco)
-
 
     def _desenhar_caminho(self):
         """Desenha os caminhos de blocos em forma de L para o centro."""
