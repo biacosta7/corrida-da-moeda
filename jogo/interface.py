@@ -171,8 +171,8 @@ class BoardDrawer:
                 if j < porquinhos_restantes:
                     self.screen.blit(porquinho_img, pos_porcos[j])
                 else:
-                    # Bloco preto para porquinhos esgotados
-                    pygame.draw.rect(self.screen, COR_PRETO, (pos_porcos[j][0], pos_porcos[j][1], self.LADO_PORCO, self.LADO_PORCO))
+                    porco_preto_img = self.assets_carregados.get('porco-preto', self.placeholder_porco)
+                    self.screen.blit(porco_preto_img, pos_porcos[j])
                     
             self._desenhar_moedas(self.screen, x_canto, y_canto, jogador.moedas_no_porco)
 

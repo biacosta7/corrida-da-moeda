@@ -15,7 +15,7 @@ UNIDADE_PASSO = 60      # Distância entre os centros dos blocos no caminho (era
 CAMINHO_TAMANHO = 9     # Número de passos no caminho (Blocos 1 a 9)
 
 # --- ESTADO INICIAL DO JOGO ---
-MOEDAS_POR_PORCO = 3    # Moedas por porquinho
+MOEDAS_POR_PORCO = 1    # Moedas por porquinho
 NUM_PORCOS = 4          # Porquinhos por jogador
 TOTAL_MOEDAS_INICIAIS = MOEDAS_POR_PORCO * NUM_PORCOS # 12 moedas
 COR_INDICADOR = (255, 255, 255) # Branco
@@ -36,5 +36,6 @@ ASSETS = {
     "porco-roxo": "assets/porco-roxo.png",
     "porco-rosa": "assets/porco-rosa.png",
     "porco-azul": "assets/porco-azul.png",
+    "porco-preto": "assets/porco-preto.png",
     "bag": "assets/bag.png",
 }
