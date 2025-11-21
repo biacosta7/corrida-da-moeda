@@ -1,227 +1,261 @@
 # interface.py
+
 import pygame
-import time
-from config import *
-from corrida import Jogador
-from eventos import lancar_moeda, obter_frequencias, obter_contadores
-from plots.grafico import Grafico
+import math
+import os 
+from assets import * # Assumindo CAMINHO_TAMANHO = 9
+from corrida import GameManager
 
-class GameInterface:
-    def __init__(self, num_players=2, cells=NUM_CELLS):
-        pygame.init()
-        pygame.font.init()
-        self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-        pygame.display.set_caption("Corrida da Moeda - Edição Estratégica")
-        self.clock = pygame.time.Clock()
-        self.font = pygame.font.SysFont(FONT_NAME, 20)
-        self.bigfont = pygame.font.SysFont(FONT_NAME, 36)
+# Determina o diretório absoluto onde este script (interface.py) está
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-        self.num_players = max(2, min(num_players, MAX_PLAYERS))
-        self.cells = cells
-        self.players = []
-        for i in range(self.num_players):
-            name = f"Jogador {i+1}"
-            color = PLAYER_COLORS[i % len(PLAYER_COLORS)]
-            self.players.append(Jogador(name, color, i))
+class BoardDrawer:
+    def __init__(self, screen, game_manager):
+        self.screen = screen
+        self.game = game_manager
+        
+        # Placeholder genérico (usado em caso de falha de carregamento)
+        self.placeholder_porco = pygame.Surface((70, 70))
+        self.placeholder_porco.fill((100, 100, 100)) 
+        
+        # Carregar e redimensionar assets
+        self.assets_carregados = {}
+        # Cria um placeholder redimensionado para o 'bag' (80x80)
+        placeholder_bag = pygame.transform.scale(self.placeholder_porco, (80, 80)) 
+        # Cria um placeholder redimensionado para o porquinho (40x40)
+        placeholder_porquinho = pygame.transform.scale(self.placeholder_porco, (40, 40))
 
-        self.current_player = 0
-        self.finished_count = 0
-        self.podium_rank = 0
+        for nome, nome_arquivo in ASSETS.items():
+            
+            # CONSTRUÇÃO DO CAMINHO: Junta o diretório do script (jogo/) 
+            # com o caminho relativo do asset (ex: assets/porco-amarelo.png)
+            caminho_completo = os.path.join(SCRIPT_DIR, nome_arquivo) 
+            
+            try:
+                img = pygame.image.load(caminho_completo).convert_alpha()
+                
+                # Redimensionar porquinhos e o saco
+                if 'porco' in nome:
+                    self.assets_carregados[nome] = pygame.transform.scale(img, (70, 70))
+                elif nome == 'bag':
+                    self.assets_carregados[nome] = pygame.transform.scale(img, (100, 100))
+            except pygame.error as e:
+                print(f"Erro ao carregar imagem: {nome_arquivo} em {caminho_completo}. Usando placeholder. Erro: {e}")
+                
+                if 'porco' in nome:
+                    self.assets_carregados[nome] = self.placeholder_porco
+                elif nome == 'bag':
+                    self.assets_carregados[nome] = pygame.transform.scale(self.placeholder_porco, (100, 100))
 
-        # coin animation state
-        self.animating = False
-        self.anim_start_time = None
-        self.anim_duration = COIN_ANIM_MS / 1000.0  # segundos
 
-        # grafico
-        self.grafico = Grafico()
+        self.font = pygame.font.Font(None, 24)
+        self.tamanho_bloco = TAMANHO_BLOCO
+        self.unidade_passo = UNIDADE_PASSO # NOVO
+        self.caminho_tamanho = CAMINHO_TAMANHO # Deve ser 9
 
-        # UI buttons (rects)
-        self.btn_flip = pygame.Rect(GAME_AREA_WIDTH + 50, 520, 200, 50)
-        self.btn_reset = pygame.Rect(GAME_AREA_WIDTH + 50, 590, 200, 40)
+        # Definir as coordenadas dos cantos para cada jogador (Caixa 100x100)
+        self.coordenadas_canto = {
+            0: (50, 50), # Amarelo (Superior Esquerdo)
+            1: (LARGURA_TELA - 120, 50), # Roxo (Superior Direito)
+            2: (50, ALTURA_TELA - 120), # Rosa (Inferior Esquerdo)
+            3: (LARGURA_TELA - 120, ALTURA_TELA - 120), # Azul (Inferior Direito)
+        }
+        
+        # Coordenadas do centro
+        self.centro_x = LARGURA_TELA // 2
+        self.centro_y = ALTURA_TELA // 2
+        
+        # --- NOVO: Estrutura do Caminho (9 movimentos) ---
+        self.path_movements = {
+            # 0: Amarelo (7 Direita (+X), 2 Baixo (+Y))
+            0: [(1, 0)] * 7 + [(0, 1)] * 2,
+            # 1: Roxo (4 Baixo (+Y), 5 Esquerda (-X))
+            1: [(0, 1)] * 4 + [(-1, 0)] * 5,
+            # 2: Rosa (4 Cima (-Y), 5 Direita (+X))
+            2: [(0, -1)] * 4 + [(1, 0)] * 5,
+            # 3: Azul (7 Esquerda (-X), 2 Cima (-Y))
+            3: [(-1, 0)] * 7 + [(0, -1)] * 2,
+        }
+        
+        # Definir as coordenadas do primeiro bloco de cada caminho (CENTRO DO BLOCO)
+        self.coordenadas_inicio_caminho = {
+            # Amarelo (0) - Começa à direita da caixa 100x100
+            0: (50 + 100 + self.tamanho_bloco // 2, 50 + self.tamanho_bloco // 2), 
+            # Roxo (1) - Começa abaixo da caixa 100x100
+            1: (LARGURA_TELA - 50 - self.tamanho_bloco // 2, 50 + 100 + self.tamanho_bloco // 2),
+            # Rosa (2) - Começa à direita da caixa 100x100
+            2: (50 + 100 + self.tamanho_bloco // 2, ALTURA_TELA - 50 - self.tamanho_bloco // 2), 
+            # Azul (3) - Começa acima da caixa 100x100
+            3: (LARGURA_TELA - 50 - self.tamanho_bloco // 2, ALTURA_TELA - 50 - 100 - self.tamanho_bloco // 2),
+        }
 
-    def draw_board(self):
-        # desenha caminho horizontal
-        for i in range(self.cells):
-            x = BOARD_LEFT + i * CELL_SIZE
-            y = BOARD_Y
-            rect = pygame.Rect(x, y, CELL_SIZE - 2, CELL_SIZE - 2)
-            pygame.draw.rect(self.screen, (200,200,200), rect)
-            # número da casa
-            num_surf = self.font.render(str(i), True, (40,40,40))
-            self.screen.blit(num_surf, (x + 4, y + 4))
+        # constantes/limites usados pela interface
+        self.MOEDAS_INICIAIS_POR_PORCO = 3
+        self.NUM_PORCOS = 4
 
-    def draw_players(self):
-        for p in self.players:
-            x = BOARD_LEFT + p.posicao * CELL_SIZE + CELL_SIZE // 2
-            y = BOARD_Y + CELL_SIZE // 2
-            # deslocar verticalmente por jogador para não sobrepor
-            offset_y = (p.idx - (self.num_players-1)/2) * 18
-            pygame.draw.circle(self.screen, p.cor, (x, int(y + offset_y)), 12)
-            name_surf = self.font.render(p.nome, True, (255,255,255))
-            self.screen.blit(name_surf, (x - 18, y + 20 + offset_y))
-
-    def draw_ui(self):
-        # painel lateral
-        panel_x = GAME_AREA_WIDTH + 20
-        self.screen.fill((40,40,40), (GAME_AREA_WIDTH, 0, GRAPH_AREA_WIDTH, WINDOW_HEIGHT))
-
-        title = self.bigfont.render("Estatística da Moeda", True, (255,255,255))
-        self.screen.blit(title, (GAME_AREA_WIDTH + 30, 20))
-
-        # jogador da vez
-        cp = self.players[self.current_player]
-        turn_txt = self.font.render(f"Vez: {cp.nome}", True, (255,255,255))
-        self.screen.blit(turn_txt, (GAME_AREA_WIDTH + 30, 80))
-
-        cara, coroa, total = obter_contadores()
-        counts_txt = self.font.render(f"Caras: {cara}  Coroas: {coroa}  Total: {total}", True, (255,255,255))
-        self.screen.blit(counts_txt, (GAME_AREA_WIDTH + 30, 110))
-
-        # botão lançar
-        pygame.draw.rect(self.screen, (100,200,100), self.btn_flip)
-        flip_txt = self.font.render("Lançar Moeda", True, (0,0,0))
-        self.screen.blit(flip_txt, (self.btn_flip.x + 30, self.btn_flip.y + 15))
-
-        # botão reset
-        pygame.draw.rect(self.screen, (200,80,80), self.btn_reset)
-        reset_txt = self.font.render("Resetar Jogo", True, (0,0,0))
-        self.screen.blit(reset_txt, (self.btn_reset.x + 40, self.btn_reset.y + 10))
-
-        # podium (se já existirem colocados)
-        podium_y = 180
-        podium_title = self.font.render("Pódio (parcial):", True, (255,255,255))
-        self.screen.blit(podium_title, (GAME_AREA_WIDTH + 30, podium_y))
-        for p in sorted(self.players, key=lambda x: (x.colocacao is None, x.colocacao)):
-            idx = p.colocacao
-            if idx is None:
-                continue
-            text = f"{idx}º - {p.nome}"
-            self.screen.blit(self.font.render(text, True, (255,255,0)), (GAME_AREA_WIDTH + 30, podium_y + 20 * idx))
-
-    def start_coin_animation(self):
-        self.animating = True
-        self.anim_start_time = time.time()
-
-    def update_coin_animation(self):
+    def _desenhar_moedas(self, screen, x, y, total_moedas):
         """
-        Retorna True se a animação terminou neste frame (ou False se ainda animando).
+        Desenha, para cada um dos 4 porquinhos (posição 2x2 dentro do bloco 100x100),
+        quantas moedas esse porquinho tem (0..MOEDAS_INICIAIS_POR_PORCO).
+        total_moedas é o total de moedas do jogador (ex: 7).
         """
-        if not self.animating:
-            return False
-        elapsed = time.time() - self.anim_start_time
-        if elapsed >= self.anim_duration:
-            self.animating = False
-            return True
-        return False
+        posicoes = [
+            (25, 25), (75, 25),
+            (25, 75), (75, 75)
+        ]
 
-    def handle_flip_result(self):
-        # efetua o lançamento real (após animação)
-        res = lancar_moeda()  # 'H' ou 'T'
-        if res == "H":
-            # avança jogador atual
-            p = self.players[self.current_player]
-            if p.ativo:
-                p.posicao += 1
-                if p.posicao >= self.cells - 1:
-                    # chegou ao fim
-                    self.podium_rank += 1
-                    p.colocacao = self.podium_rank
-                    p.ativo = False
-                    self.finished_count += 1
-        # atualizar gráfico (matplotlib) chamando grafico.atualizar()
-        # aqui chamamos o método que re-desenha o gráfico
-        self.grafico.atualizar()
-        # passar turno para o próximo jogador ativo
-        self.next_turn()
+        # Para cada porquinho (0..NUM_PORCOS-1) calcula quantas moedas ele tem
+        for i in range(self.NUM_PORCOS):
+            # moedas pertencentes ao porquinho i
+            # ex: porquinho 0 -> total - 0*3, porquinho 1 -> total - 1*3, ...
+            moedas_porquinho = max(0, min(total_moedas - i * self.MOEDAS_INICIAIS_POR_PORCO,
+                                            self.MOEDAS_INICIAIS_POR_PORCO))
 
-    def next_turn(self):
-        # avança até encontrar próximo jogador ativo (ou encerra se todos terminaram)
-        if self.finished_count >= self.num_players:
-            return
-        next_idx = (self.current_player + 1) % self.num_players
-        start_idx = next_idx
-        while not self.players[next_idx].ativo:
-            next_idx = (next_idx + 1) % self.num_players
-            # se todos inativos, para
-            if next_idx == start_idx:
-                return
-        self.current_player = next_idx
+            if moedas_porquinho > 0:
+                cx = x + posicoes[i][0]
+                cy = y + posicoes[i][1]
 
-    def reset_game(self):
-        for i, p in enumerate(self.players):
-            p.posicao = 0
-            p.ativo = True
-            p.colocacao = None
-        self.current_player = 0
-        self.finished_count = 0
-        self.podium_rank = 0
-        # reiniciar contadores da simulação
-        # nota: eventos.sim é o objeto global; vamos reiniciar criando um novo (hack simples)
-        from eventos import sim as sim_obj
-        sim_obj.cara = 0
-        sim_obj.coroa = 0
-        sim_obj.total = 0
-        self.grafico.atualizar()
+                # Desenha o círculo de fundo e o número (3,2,1)
+                pygame.draw.circle(screen, COR_BRANCO, (cx, cy), 10)
+                texto = self.font.render(str(moedas_porquinho), True, COR_PRETO)
+                screen.blit(
+                    texto,
+                    (cx - texto.get_width() // 2, cy - texto.get_height() // 2)
+                )
+            
+    def _desenhar_porquinhos(self):
+        """Desenha os 4 porquinhos e indica as moedas restantes."""
+        
+        asset_map = {0: "amarelo", 1: "roxo", 2: "rosa", 3: "azul"}
+        
+        for i, jogador in enumerate(self.game.jogadores):
+            x_canto, y_canto = self.coordenadas_canto[i]
+            
+            # Desenha a área de fundo colorida do jogador (100x100)
+            pygame.draw.rect(self.screen, jogador.cor, (x_canto, y_canto, 100, 100), 0, 15)
 
-    def draw_coin(self):
-        # desenha uma "moeda" animada simples dependendo do tempo restante
-        center = (GAME_AREA_WIDTH + 150, 420)
-        # se animando, fazer um efeito de "flip" (mudar largura)
-        if self.animating:
-            elapsed = time.time() - self.anim_start_time
-            progress = elapsed / self.anim_duration
-            # largura oscila entre 26 e 60
-            width = int(60 * abs(0.5 - progress) * 2) + 10
-            pygame.draw.ellipse(self.screen, (220, 220, 100), (center[0]-width//2, center[1]-30, width, 60))
-            text = self.font.render("...", True, (0,0,0))
-            self.screen.blit(text, (center[0]-10, center[1]-10))
-        else:
-            # mostrar a última contagem/estado (cara ou coroa)
-            cara, coroa, total = obter_contadores()
-            # se houver ao menos 1 lançamento, mostre último valor aproximado por comparar frequências
-            if total > 0:
-                # mostra proporção de caras numericamente
-                txt = f"Caras: {cara}"
-            else:
-                txt = "Clique em Lançar"
-            pygame.draw.circle(self.screen, (220,220,100), center, 30)
-            text = self.font.render(txt, True, (0,0,0))
-            self.screen.blit(text, (center[0]-40, center[1]-10))
+            asset_nome = asset_map[i]
+            porquinho_img = self.assets_carregados.get(asset_nome)
+            
+            # Posições dos 4 porquinhos 2x2 dentro do bloco 100x100
+            pos_porcos = [
+                (x_canto + 5, y_canto + 5), (x_canto + 55, y_canto + 5),
+                (x_canto + 5, y_canto + 55), (x_canto + 55, y_canto + 55)
+            ]
+            
+            # porquinhos_restantes: quantos porquinhos ainda têm moedas inteiras (3)
+            # se total == 0 -> 0
+            porquinhos_restantes = 0
+            if jogador.moedas_no_porco > 0:
+                porquinhos_restantes = math.ceil(jogador.moedas_no_porco / self.MOEDAS_INICIAIS_POR_PORCO)
 
-    def run(self):
-        running = True
-        # desenhar gráfico inicialmente
-        self.grafico.atualizar()
+            for j in range(self.NUM_PORCOS):
+                if porquinho_img:
+                    self.screen.blit(porquinho_img, pos_porcos[j])
+                
+                # Overlay escuro se o porquinho já depositou suas 3 moedas (ou seja, não está cheio)
+                if j >= porquinhos_restantes:
+                    overlay = pygame.Surface((40, 40), pygame.SRCALPHA)
+                    overlay.fill((0, 0, 0, 150)) 
+                    self.screen.blit(overlay, pos_porcos[j])
+                    
+            # Desenha os números (3,2,1,0) a partir do total de moedas do jogador
+            self._desenhar_moedas(self.screen, x_canto, y_canto, jogador.moedas_no_porco)
 
-        while running:
-            self.screen.fill((25,25,25))
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
 
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    mx, my = event.pos
-                    if self.btn_flip.collidepoint(mx, my) and not self.animating and self.finished_count < self.num_players:
-                        # iniciar animação; o resultado será aplicado quando a animação terminar
-                        self.start_coin_animation()
-                    elif self.btn_reset.collidepoint(mx, my):
-                        self.reset_game()
+    def _desenhar_caminho(self):
+        """Desenha os caminhos de blocos em forma de L para o centro."""
+        
+        for i, cor in enumerate(self.game.cores_tabuleiro):
+            # Ponto de partida do primeiro bloco (centro do bloco 1)
+            x_atual, y_atual = self.coordenadas_inicio_caminho[i]
+            
+            # Movimentos do caminho (9 passos)
+            movimentos = self.path_movements[i]
+            
+            for dx_step, dy_step in movimentos:
+                # O bloco_x e bloco_y representam o CENTRO do quadrado a ser desenhado
+                bloco_x = x_atual
+                bloco_y = y_atual
+                
+                # Desenha o quadrado (ajustando o canto superior esquerdo para centralizar)
+                pygame.draw.rect(self.screen, cor, 
+                                 (bloco_x - self.tamanho_bloco // 2, 
+                                  bloco_y - self.tamanho_bloco // 2, 
+                                  self.tamanho_bloco, self.tamanho_bloco))
+                                  
+                # Prepara as coordenadas para o próximo bloco (desloca o centro do bloco)
+                x_atual += dx_step * self.unidade_passo # Usa UNIDADE_PASSO
+                y_atual += dy_step * self.unidade_passo # Usa UNIDADE_PASSO
+                                  
+    def _desenhar_centro(self):
+        """Desenha o círculo central e o saco de moedas."""
+        
+        # Círculo Branco Central
+        pygame.draw.circle(self.screen, COR_BRANCO, (self.centro_x, self.centro_y), 70)
+        
+        # Saco de Moedas (BAG) - Usa o placeholder seguro como fallback
+        bag_img_placeholder = pygame.transform.scale(self.placeholder_porco, (100, 100))
+        bag_img = self.assets_carregados.get('bag', bag_img_placeholder) 
+        self.screen.blit(bag_img, (self.centro_x - 50, self.centro_y - 50))
+        
+        # Desenhar os contadores (0 de cada jogador)
+        raio_contador = 40
+        font_grande = pygame.font.Font(None, 36)
+        
+        for i, jogador in enumerate(self.game.jogadores):
+            # Posições relativas ao centro
+            pos_relativa = {
+                0: (-raio_contador, -raio_contador), # Amarelo (Cima-Esquerda)
+                1: (raio_contador, -raio_contador),  # Roxo (Cima-Direita)
+                2: (-raio_contador, raio_contador),  # Rosa (Baixo-Esquerda)
+                3: (raio_contador, raio_contador),   # Azul (Baixo-Direita)
+            }
+            
+            offset_x, offset_y = pos_relativa[i]
+            contador_x = self.centro_x + offset_x
+            contador_y = self.centro_y + offset_y
 
-            # atualizar animação
-            if self.animating:
-                finished_anim = self.update_coin_animation()
-                if finished_anim:
-                    # aplicar resultado e atualizar gráfico
-                    self.handle_flip_result()
-            # desenhar partes
-            self.draw_board()
-            self.draw_players()
-            self.draw_ui()
-            self.draw_coin()
+            # Desenha o contador
+            texto = font_grande.render(str(jogador.moedas_depositadas), True, jogador.cor)
+            self.screen.blit(texto, (contador_x - texto.get_width() // 2, 
+                                     contador_y - texto.get_height() // 2))
 
-            # desenha legenda do gráfico (a janela matplotlib fica separada)
-            pygame.display.flip()
-            self.clock.tick(FPS)
+    def _desenhar_indicadores(self):
+        """Desenha as bolinhas que representam os jogadores nos caminhos."""
+        
+        for i, jogador in enumerate(self.game.jogadores):
+            posicao_caminho = jogador.posicao_caminho
+            
+            # Posição 0: Fora do caminho (no canto)
+            # Posições 1 a 9: No caminho colorido
+            if posicao_caminho > 0 and posicao_caminho <= self.caminho_tamanho: 
+                
+                # Ponto de partida (centro do bloco 1)
+                x_atual, y_atual = self.coordenadas_inicio_caminho[i]
+                
+                # Movimentos do caminho (9 passos)
+                movimentos = self.path_movements[i]
+                
+                # Calcula a posição do centro do bloco (posicao_caminho)
+                # O loop vai até posicao_caminho - 1, para parar na posição correta
+                for j in range(posicao_caminho - 1): 
+                    dx_step, dy_step = movimentos[j]
+                    
+                    x_atual += dx_step * self.unidade_passo # Usa UNIDADE_PASSO
+                    y_atual += dy_step * self.unidade_passo # Usa UNIDADE_PASSO
+                
+                # (x_atual, y_atual) é o centro do bloco onde o jogador está
+                pygame.draw.circle(self.screen, jogador.cor, (x_atual, y_atual), self.tamanho_bloco // 3)
 
-        pygame.quit()
+            # Posição 10: No centro (chegou ao círculo branco)
+            elif posicao_caminho == self.caminho_tamanho + 1: 
+                # Desenha o indicador no centro do tabuleiro (sobre o círculo branco)
+                pygame.draw.circle(self.screen, jogador.cor, (self.centro_x, self.centro_y), self.tamanho_bloco // 3) 
+                
+    def desenhar_tudo(self):
+        """Desenha todos os elementos do jogo."""
+        self._desenhar_caminho()
+        self._desenhar_porquinhos()
+        self._desenhar_centro()
+        self._desenhar_indicadores()
