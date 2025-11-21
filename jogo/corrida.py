@@ -7,16 +7,18 @@ from eventos import sim
 class Player:
     def __init__(self, id, cor):
         self.id = id
-        self.cor = cor
+        self.cor = COR_PRETO
         self.moedas_no_porco = TOTAL_MOEDAS_INICIAIS
         self.moedas_depositadas = 0
         self.posicao_caminho = 0  # 0: início, caminho_tamanho: centro
 
 class GameManager:
-    def __init__(self, num_jogadores=2):
+    def __init__(self, num_jogadores=4):
         self.jogadores = [
-            Player(0, COR_AMARELO),
-            Player(1, COR_ROSA),
+            Player(0, COR_PRETO),
+            Player(1, COR_PRETO),
+            Player(2, COR_PRETO),
+            Player(3, COR_PRETO),
             # Adicione mais se for multi-jogador
         ]
         
