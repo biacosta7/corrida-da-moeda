@@ -11,7 +11,7 @@ class SimuladorMoeda:
         
     def lancar_e_registrar(self):
         """Simula o lançamento, registra o resultado e retorna 'H' (Cara) ou 'T' (Coroa)."""
-        resultado = random.choice(['H', 'T']) 
+        resultado = random.choice(['H', 'T']) # PARA TESTAR: resultado = random.choices(['C', 'K'], weights=[80, 20], k=1)[0]
         self.total += 1
         
         if resultado == 'H':
