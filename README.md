@@ -20,7 +20,7 @@ Distribuição teórica: curva esperada da distribuição binomial, podendo tamb
 
 Essa comparação entre teoria e prática permite visualizar conceitos como variabilidade, Lei dos Grandes Números e convergência estatística de um jeito simples e intuitivo.
 
-#Como rodar
+# Como rodar
 1. Crie uma venv
    python -m venv venv
 2. Abra a venv 
