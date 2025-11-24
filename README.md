@@ -21,11 +21,24 @@ Distribuição teórica: curva esperada da distribuição binomial, podendo tamb
 Essa comparação entre teoria e prática permite visualizar conceitos como variabilidade, Lei dos Grandes Números e convergência estatística de um jeito simples e intuitivo.
 
 # Como rodar
-1. Crie uma venv
-   --python -m venv venv
-2. Abra a venv 
-   --venv\Scripts\activate (se for no windows)
-3. Baixe os imports
-   --pip install -r requirements.txt
-4. Rode o jogo
-   --python jogo/main.py
+
+1. Crie uma venv  
+```bash
+python -m venv venv
+```
+
+2. Abra a venv (Windows)  
+```bash
+venv\Scripts\activate
+```
+
+3. Baixe os imports  
+```bash
+pip install -r requirements.txt
+```
+
+4. Rode o jogo  
+```bash
+python jogo/main.py
+```
+
