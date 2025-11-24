@@ -22,10 +22,10 @@ Essa comparação entre teoria e prática permite visualizar conceitos como vari
 
 # Como rodar
 1. Crie uma venv
-   python -m venv venv
+   --python -m venv venv
 2. Abra a venv 
-   venv\Scripts\activate (se for no windows)
+   --venv\Scripts\activate (se for no windows)
 3. Baixe os imports
-   pip install -r requirements.txt
+   --pip install -r requirements.txt
 4. Rode o jogo
-   python jogo/main.py
+   --python jogo/main.py
