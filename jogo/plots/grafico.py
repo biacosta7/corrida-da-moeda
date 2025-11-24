@@ -1,35 +1,52 @@
+import matplotlib
+matplotlib.use("Agg")   # backend sem janela
+
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+import pygame
+import numpy as np
+
 
 class Grafico:
     def __init__(self):
-        self.frequencias = []  # lista de P(cara) a cada lançamento
-        plt.ion()
-        self.fig, self.ax = plt.subplots()
-        self.ax.set_title("Distribuição Empírica da Moeda")
-        self.ax.set_xlabel("Número de lançamentos")
-        self.ax.set_ylabel("Probabilidade de Cara")
+        self.cara = 0
+        self.total = 0
+        self.frequencias = []
+        self.fig = None
+        self.ax = None
+        self.canvas = None
 
-    def atualizar(self):
-        from eventos import sim  # evita import circular
+    def registrar_lancamento(self, resultado):
+        """Registra o lançamento da moeda vinda do GameManager."""
+        self.total += 1
+        if resultado == "C":  # o jogo usa C/K
+            self.cara += 1
 
-        if sim.total == 0:
+    def _init_canvas(self):
+        if self.fig is None:
+            self.fig, self.ax = plt.subplots(figsize=(3, 2))
+            self.canvas = FigureCanvasAgg(self.fig)
+
+    def atualizar(self, superficie_destino, pos=(720, 20)):
+        """Desenha o gráfico na tela do pygame."""
+        self._init_canvas()
+
+        if self.total == 0:
             return
 
-        # probabilidade empírica
-        p_cara = sim.cara / sim.total
-        self.frequencias.append(p_cara)
+        prob = self.cara / self.total
+        self.frequencias.append(prob)
 
-        # redesenhar
         self.ax.clear()
-        self.ax.plot(self.frequencias, label="P(cara) empírica")
+        self.ax.plot(self.frequencias)
+        self.ax.axhline(0.5, linestyle="--")
 
-        # linha teórica
-        self.ax.axhline(0.5, color='red', linestyle='--', label="P(cara) teórica = 0.5")
+        self.fig.tight_layout()
+        self.canvas.draw()
 
-        self.ax.set_title("Distribuição Empírica da Moeda")
-        self.ax.set_xlabel("Número de lançamentos")
-        self.ax.set_ylabel("Probabilidade de Cara")
-        self.ax.set_ylim(0, 1)
+        buf = np.frombuffer(self.canvas.tostring_rgb(), dtype=np.uint8)
+        w, h = self.fig.canvas.get_width_height()
+        buf = buf.reshape(h, w, 3)
 
-        self.ax.legend()
-        plt.pause(0.001)
+        surf = pygame.image.frombuffer(buf.tobytes(), (w, h), "RGB")
+        superficie_destino.blit(surf, pos)

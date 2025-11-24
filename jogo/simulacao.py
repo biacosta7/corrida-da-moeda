@@ -8,10 +8,10 @@ class SimulacaoMoeda:
         self.total = 0
 
     def lancar(self):
-        """Retorna 'H' para cara ou 'T' para coroa e atualiza contadores."""
-        resultado = random.choice(["H", "T"])
+        """Retorna 'C' para cara ou 'K' para coroa e atualiza contadores."""
+        resultado = random.choice(["C", "K"])
         self.total += 1
-        if resultado == "H":
+        if resultado == "C":
             self.cara += 1
         else:
             self.coroa += 1
