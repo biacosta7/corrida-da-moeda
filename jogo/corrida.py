@@ -1,8 +1,9 @@
 # corrida.py
 
 import random
-from assets import *
+from config_assets import *
 from eventos import sim
+
 class Player:
     def __init__(self, id, cor):
         self.id = id
@@ -20,16 +21,11 @@ class GameManager:
         self.jogo_ativo = True
         self.vencedor = None
         self.tamanho_caminho = CAMINHO_TAMANHO
+        self.simulacao = sim
 
     def lancar_moeda(self):
-        """Simula o lançamento da moeda e retorna 'C' (Cara) ou 'K' (Coroa)."""
-        # 1 = Cara (C) - Move
-        # 0 = Coroa (K) - Não move
-        resultado_sim = sim.lancar_e_registrar()
-        if random.randint(0, 1) == 1: 
-            return "C"
-        else:
-            return "K"
+        return sim.lancar_e_registrar()   # já vem 'C' ou 'K'
+
 
     def mover_jogador_ativo(self, passos):
         """Move o jogador ativo à frente, se possível."""

@@ -3,8 +3,9 @@
 import pygame
 import math
 import os 
-from assets import * # Importa as constantes, incluindo LARGURA_TELA/ALTURA_TELA
+from config_assets import * # Importa as constantes, incluindo LARGURA_TELA/ALTURA_TELA
 from corrida import GameManager
+from plots.grafico import Grafico
 
 # Determina o diretório absoluto onde este script (interface.py) está
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
