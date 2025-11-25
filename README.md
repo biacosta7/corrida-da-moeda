@@ -30,7 +30,6 @@ O gráfico rastreia a **frequência relativa de 'Cara'** ao longo dos lançament
 
 $$\text{Frequência Observada} \to 0.5, \text{ quando } N \to \infty$$
 
------
 
 ## 🚀 Como Rodar o Jogo
 1. **Clone o reppositório**
