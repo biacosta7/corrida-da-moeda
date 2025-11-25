@@ -1,44 +1,67 @@
-🪙 Corrida da Moeda — Descrição do Jogo
+# 🪙 Corrida da Moeda (Coin Race)
 
-Corrida da Moeda é um jogo estatístico interativo que simula, em tempo real, o comportamento de eventos aleatórios. Nele, dois personagens competem em uma corrida cuja progressão depende exclusivamente de lançamentos de moeda. A cada rodada, um lançamento determina o movimento: cara faz o personagem avançar e coroa o mantém parado.
+## 🌟 Visão Geral do Jogo
 
-O objetivo do jogo é mostrar, de forma visual e dinâmica, como resultados aleatórios se comportam ao longo do tempo e como eles se aproximam das probabilidades teóricas esperadas.
+**Corrida da Moeda** é uma simulação interativa baseada em Pygame que funde um jogo de tabuleiro competitivo com a visualização em tempo real de conceitos de probabilidade.
 
-📊 Conceitos Estatísticos
+Quatro jogadores competem para ser o primeiro a **depositar todas as suas moedas** em um cofre central. A progressão de cada jogador é determinada exclusivamente pelo lançamento de uma moeda:
 
-A dinâmica do jogo é baseada na Distribuição Binomial com probabilidade p = 0.5 (moeda justa). Cada lançamento é um experimento independente com dois resultados possíveis:
+| Resultado | Ação do Jogador |
+| :---: | :--- |
+| **Cara (C)** | Avança um passo no caminho em direção ao cofre central. |
+| **Coroa (K)** | Permanece parado. |
 
-Sucesso (1): o personagem avança — equivalente a “cara”.
+## 📊 O Conceito Estatístico: Lei dos Grandes Números
 
-Fracasso (0): o personagem permanece no lugar — equivalente a “coroa”.
+Embora o resultado de cada lançamento da moeda seja imprevisível, o gráfico demonstra que, a longo prazo, a frequência de obtenção de Cara se estabiliza.
 
-Ao longo das rodadas, o jogo apresenta:
+A **Lei dos Grandes Números** afirma que, à medida que o $N$ (Número Total de Lançamentos) aumenta, a **Frequência Relativa** observada dos resultados converge e se aproxima da **Probabilidade Teórica** esperada (neste caso, $0.5$).
 
-Distribuição empírica: frequência real de caras e coroas observadas em tempo real.
+### Estrutura do Gráfico
 
-Distribuição teórica: curva esperada da distribuição binomial, podendo também ser aproximada pela distribuição normal conforme o número de lançamentos aumenta.
+O gráfico rastreia a **frequência relativa de 'Cara'** ao longo dos lançamentos:
 
-Essa comparação entre teoria e prática permite visualizar conceitos como variabilidade, Lei dos Grandes Números e convergência estatística de um jeito simples e intuitivo.
+| Elemento | Descrição |
+| :--- | :--- |
+| **Eixo Y** | **Frequência de Caras** (valor de $0$ a $1$). |
+| **Eixo X** | **Número Total de Lançamentos** (o número de cliques). |
+| **Linha Azul** | Representa a **Frequência Relativa** observada dos resultados Cara. |
+| **Linha Tracejada (0.5)** | Representa a **Probabilidade Teórica** de obter Cara ($p=0.5$). |
 
-# Como rodar
+$$\text{Frequência Observada} \to 0.5, \text{ quando } N \to \infty$$
 
-1. Crie uma venv  
-```bash
-python -m venv venv
-```
+-----
 
-2. Abra a venv (Windows)  
-```bash
-venv\Scripts\activate
-```
+## 🚀 Como Rodar o Jogo
+1. **Clone o reppositório**
+   ```bash
+   git clone https://github.com/biacosta7/corrida-da-moeda.git
+   ```
 
-3. Baixe os imports  
-```bash
-pip install -r requirements.txt
-```
+2.  **Crie um Ambiente Virtual (`venv`):**
 
-4. Rode o jogo  
-```bash
-python jogo/main.py
-```
+    ```bash
+    python -m venv venv
+    ```
 
+3.  **Ative o Ambiente Virtual:**
+
+    ```bash
+    venv\Scripts\activate (Windows)
+    ```
+
+   ```bash
+    source venv/bin/activate (Linux/macOS)
+   ```
+
+4.  **Instale as Dependências:**
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+5.  **Execute o Jogo:**
+
+    ```bash
+    python jogo/main.py
+    ```
