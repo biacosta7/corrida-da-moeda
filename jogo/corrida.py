@@ -3,6 +3,7 @@
 import random
 from config_assets import *
 from eventos import sim
+
 class Player:
     def __init__(self, id, cor):
         self.id = id
@@ -20,6 +21,7 @@ class GameManager:
         self.jogo_ativo = True
         self.vencedor = None
         self.tamanho_caminho = CAMINHO_TAMANHO
+        self.simulacao = sim
 
     def lancar_moeda(self):
         return sim.lancar_e_registrar()   # já vem 'C' ou 'K'
