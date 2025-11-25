@@ -17,7 +17,7 @@ class Grafico:
 
     def _init_canvas(self):
         if self.fig is None:
-            self.fig, self.ax = plt.subplots(figsize=(4, 3))
+            self.fig, self.ax = plt.subplots(figsize=(3, 2))
             self.canvas = FigureCanvasAgg(self.fig)
             
 
